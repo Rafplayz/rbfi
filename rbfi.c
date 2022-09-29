@@ -14,25 +14,38 @@
 #include <string.h>
 #include <conio.h>
 
-#define byte unsigned char;
+#define byte unsigned char
+#define DEBUG false
 
 bool output_specified = false;
+
+struct mainReturn {
+    /**
+     * @brief if "main" is the index of a ']'
+     */
+    bool isIndex;
+    int main;
+};
 
 int fatal_error(const char* msg) {
     printf("\nrbfi fatal error: %s\n", msg);
     exit(1);
 }
 
-int mainloop(char* bf_code) {
-
-    char bf_interpreter_array[30000] = {0};
-    char* ptr = bf_interpreter_array;
+struct mainReturn mainloop(char* ptr, char* bf_code, int startingIndex) {
+    
 
     int loop_depth = 0;
     int loop_repititions = 0;
 
-    for(int i = 0; i < strlen(bf_code);i++) {
+    int bf_code_len = strlen(bf_code);
+    if(startingIndex == 0 && DEBUG)
+        printf("length of bf_code: %d\n", bf_code_len);
+    
+    for(int i = startingIndex; i < bf_code_len;i++) {
         char c = bf_code[i];
+        if(DEBUG)
+            printf("evaluating character: %c\n", c);
         switch(c) {
             case '>':
                 ptr++;
@@ -61,33 +74,28 @@ int mainloop(char* bf_code) {
                     printf("\b\b");
                 }
                 break;
-            // case '[':
-            //     if(*ptr) {
-            //         int temp_loop_depth = 1;
-            //         bool hasExit = false;
-            //         for(int j = i; j < strlen(bf_code); j++) {
-            //             if(bf_code[j] == ']') {
-            //                 temp_loop_depth--;
-            //             }
-            //             else if (bf_code[j] == '[') {
-            //                 temp_loop_depth++;
-            //             }
-                        
-            //         }
-            //         if(!hasExit) fatal_error("unmatched [");
-            //         while(*ptr) {
-            //             for(int j = i; j < strlen(bf_code);j++) {
-                            
-            //             }
-            //         }
-            //     }
-            case '[':
-                fatal_error("does not support loops yet");
+            case '[': ; // what
+                if(DEBUG)
+                    printf("\nloop started\nptr value: %d", *ptr);
+                while (*ptr) {
+                    struct mainReturn mainloopresult = mainloop(ptr, bf_code, i + 1);
+                    if (mainloopresult.isIndex) 
+                        i = mainloopresult.main;
+                }
                 break;
-            case ']':
-                fatal_error("does not support loops yet");
-                break;
+            case ']': ; // again
+                struct mainReturn r = {false, 0};
+                if(*ptr) {
+                    r.main = *ptr;
+                }
+                else {
+                    r.isIndex = true;
+                    r.main = i + 1;
+                }
+                return r;
         }
+        if(DEBUG)
+            printf("<%c%d\n", c, i);
     }
 }
 
@@ -125,8 +133,50 @@ int main(int argc, char* argv[])
     free(buffer);
     bf_code[i] = '\0';
 
-    mainloop(bf_code);
+    // survey the code for any unmade loops
+    int temp_loop_depth = 0;
+
+    for (int j = 0; j < strlen(bf_code); j++)
+    {
+        if(DEBUG) {
+            printf("\nloop number: %d\n", j);
+            printf("current loop depth: %d\n", temp_loop_depth);
+            printf("current character: %c\n", bf_code[j]);
+        }
+        if (bf_code[j] == ']')
+        {
+            temp_loop_depth--;
+        }
+        else if (bf_code[j] == '[')
+        {
+            temp_loop_depth++;
+        }
+        if(DEBUG)
+            printf("end loop depth: %d\n", temp_loop_depth);
+    }
+    if (temp_loop_depth)
+        fatal_error("unclosed loop");
+
+    printf("how much memory do you want to dedicate\n(note: smart to set this around 100-500, most programs do not need more!!)\n\n>> ");
+    int memToAllocate;
+    scanf("%d", &memToAllocate);
+
+    if(memToAllocate < 10) {
+        fatal_error("too little memory");
+    }
+
+    char bf_interpreter_array[memToAllocate * sizeof(char)];
+    memset(bf_interpreter_array, 0, memToAllocate * sizeof(char));
+    char* ptr = bf_interpreter_array;
+
+    mainloop(ptr, bf_code, 0);
     
+    if(DEBUG) {
+        printf("[DEBUG] all memory slots\n");
+        for (char* i = bf_interpreter_array;i != bf_interpreter_array + memToAllocate;i++) {
+            printf("%d ", *i);
+        }
+    }
     
     return 0;
 }
