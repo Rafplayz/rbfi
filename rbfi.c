@@ -33,10 +33,6 @@ int fatal_error(const char* msg) {
 }
 
 struct mainReturn mainloop(char* ptr, char* bf_code, int startingIndex) {
-    
-
-    int loop_depth = 0;
-    int loop_repititions = 0;
 
     int bf_code_len = strlen(bf_code);
     if(startingIndex == 0 && DEBUG)
