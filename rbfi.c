@@ -69,6 +69,7 @@ struct mainReturn mainloop(char* ptr, char* bf_code, int startingIndex) {
                 printf("\b"); // remove the first character before starting the loop
 
                 #define CHARS_TO_REMOVE 5
+                // remove all CHARS_TO_REMOVE from cmd output
                 for(int i = 0; i < CHARS_TO_REMOVE; i++) {
                     printf(" ");
                     printf("\b\b");
@@ -78,6 +79,8 @@ struct mainReturn mainloop(char* ptr, char* bf_code, int startingIndex) {
                 if(DEBUG)
                     printf("\nloop started\nptr value: %d", *ptr);
                 while (*ptr) {
+                    // recursive solution
+                    // loops until *ptr == 0
                     struct mainReturn mainloopresult = mainloop(ptr, bf_code, i + 1);
                     if (mainloopresult.isIndex) 
                         i = mainloopresult.main;
